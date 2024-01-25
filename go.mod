@@ -1,6 +1,6 @@
 module github.com/deranged0tter/govm
 
-go 1.21.3
+go 1.20
 
 require github.com/mitchellh/go-ps v1.0.0
 

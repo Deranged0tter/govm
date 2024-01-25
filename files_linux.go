@@ -18,5 +18,15 @@ func checkFiles() (bool, error) {
 		isVm = true
 	}
 
+	if _, err := os.Stat("/etc/vmware-tools"); err == nil {
+		isVm = true
+	}
+	if _, err := os.Stat("/usr/bin/vmware-user"); err == nil {
+		isVm = true
+	}
+	if _, err := os.Stat("/var/log/vmware-network.log"); err == nil {
+		isVm = true
+	}
+
 	return isVm, nil
 }

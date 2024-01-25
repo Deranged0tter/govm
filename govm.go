@@ -1,12 +1,38 @@
 package govm
 
 import (
+	"encoding/json"
 	"errors"
+	"net"
 	"runtime"
 	"strings"
 
 	"github.com/pbnjay/memory"
 )
+
+// run all checks and return the results as a json
+func CheckAll() string {
+	isCheckMac, _ := CheckMacAdr()
+	isCheckProcesses, _ := CheckProcesses()
+	isCheckFiles, _ := CheckFiles()
+	isCheckCores, _ := CheckCores(0)
+	isCheckRam, _ := CheckRam(0)
+	isCheckOnline := CheckOnline()
+
+	results := checkAllReturn{
+		CheckMac:       isCheckMac,
+		CheckProcesses: isCheckProcesses,
+		CheckFiles:     isCheckFiles,
+		CheckCores:     isCheckCores,
+		CheckRam:       isCheckRam,
+		CheckOnline:    isCheckOnline,
+	}
+
+	bResults, _ := json.Marshal(results)
+	var sResults string = string(bResults)
+
+	return sResults
+}
 
 // check the machine's mac address for known hypervisor addresses
 func CheckMacAdr() (bool, error) {
@@ -68,18 +94,14 @@ func CheckCores(count int) (bool, error) {
 	numOfProcessors := runtime.NumCPU()
 
 	if cores <= numOfProcessors {
-		return true, nil
-	} else {
 		return false, nil
+	} else {
+		return true, nil
 	}
 }
 
 // check whether the machine has less than or equal to x mb of ram (default is 4196, leave as 0 for default)
 func CheckRam(mb uint64) (bool, error) {
-	if mb < 0 {
-		return false, errors.New("count must be positive")
-	}
-
 	var ram uint64 = 4196 * 1048576
 	if mb != 0 {
 		ram = mb * 1048576
@@ -89,8 +111,19 @@ func CheckRam(mb uint64) (bool, error) {
 
 	// check if ram is less than or equal to machine's ram
 	if ram <= amountOfRam {
-		return true, nil
-	} else {
 		return false, nil
+	} else {
+		return true, nil
 	}
+}
+
+// check if machine can access 8.8.8.8
+func CheckOnline() bool {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	return true
 }
